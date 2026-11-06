@@ -1,0 +1,246 @@
+/* ==========================================================================
+   SKIPER-UI 87 THEME: NOIR SATIN & SCROLL-DRIVEN FADE EFFECT
+   Inspired by: @skiper-ui/skiper87 & Skiper UI Minimal Interactions
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CORE TOKENS & BLACK AESTHETICS (SOFT TEXTURES, ZERO VIBRANT GLARE)
+   -------------------------------------------------------------------------- */
+:root {
+  --skiper-bg: #080808;
+  --skiper-surface: #0e0e11;
+  --skiper-surface-card: #111114;
+  --skiper-surface-subtle: #141418;
+  --skiper-surface-raised: #18181d;
+  
+  --skiper-text-primary: #ededed;
+  --skiper-text-secondary: #a1a1aa;
+  --skiper-text-muted: #71717a;
+  
+  --skiper-border: rgba(255, 255, 255, 0.08);
+  --skiper-border-subtle: rgba(255, 255, 255, 0.05);
+  --skiper-border-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Primary Action: Crisp Soft White with Pure Ink Contrast (shadcn/ui dark) */
+  --skiper-btn-primary-bg: #f4f4f5;
+  --skiper-btn-primary-fg: #09090b;
+  --skiper-btn-primary-hover: #e4e4e7;
+  
+  /* Soft Textures & Satin Shadows */
+  --skiper-shadow-glass: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08), 
+                         inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.12),
+                         0 12px 36px -4px rgba(0, 0, 0, 0.85);
+  --skiper-card-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+                        0 8px 24px -4px rgba(0, 0, 0, 0.7);
+}
+
+/* Base Body Application */
+body {
+  background-color: var(--skiper-bg) !important;
+  color: var(--skiper-text-primary) !important;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.035) 0%, transparent 65%),
+    radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.015) 0%, transparent 50%),
+    linear-gradient(to bottom, #080808, #0a0a0c) !important;
+  background-attachment: fixed !important;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Modern Minimalist Dark Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* --------------------------------------------------------------------------
+   2. SKIPER87 SCROLL WITH FADE EFFECT
+   Pure CSS Scroll-Driven Mask Animation (Top/Bottom & Left/Right)
+   -------------------------------------------------------------------------- */
+@supports (animation-timeline: scroll()) {
+  @property --ft {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --fb {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 40px;
+  }
+  @property --fl {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --fr {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 36px;
+  }
+
+  /* Vertical Scroll Fade Container */
+  .scroll-fade-y,
+  .skiper87-scroll-y,
+  [data-slot="scroll-area-viewport"] {
+    --ft: 0px;
+    --fb: 40px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--ft), #000 calc(100% - var(--fb)), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 var(--ft), #000 calc(100% - var(--fb)), transparent 100%);
+    animation: skiperFadeTop linear both, skiperFadeBottom linear both;
+    animation-timeline: scroll(self), scroll(self);
+    animation-range: 0 12%, 88% 100%;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+
+  @keyframes skiperFadeTop {
+    0% { --ft: 0px; }
+    to { --ft: 40px; }
+  }
+
+  @keyframes skiperFadeBottom {
+    0% { --fb: 40px; }
+    to { --fb: 0px; }
+  }
+
+  /* Horizontal Scroll Fade Container */
+  .scroll-fade-x,
+  .skiper87-scroll-x {
+    --fl: 0px;
+    --fr: 36px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
+    animation: skiperFadeLeft linear both, skiperFadeRight linear both;
+    animation-timeline: scroll(self), scroll(self);
+    animation-range: 0 10%, 90% 100%;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+
+  @keyframes skiperFadeLeft {
+    0% { --fl: 0px; }
+    to { --fl: 36px; }
+  }
+
+  @keyframes skiperFadeRight {
+    0% { --fr: 36px; }
+    to { --fr: 0px; }
+  }
+}
+
+/* Fallback Mask for Browsers without CSS Scroll-Driven Timelines */
+@supports not (animation-timeline: scroll()) {
+  .scroll-fade-y,
+  .skiper87-scroll-y {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16px, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 16px, #000 calc(100% - 24px), transparent 100%);
+  }
+
+  .scroll-fade-x,
+  .skiper87-scroll-x {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 16px, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 16px, #000 calc(100% - 24px), transparent 100%);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. SOFT TEXTURE & NOIR SATIN CARD UTILITIES
+   -------------------------------------------------------------------------- */
+.skiper-card {
+  background: var(--skiper-surface-card);
+  border: 1px solid var(--skiper-border);
+  box-shadow: var(--skiper-card-shadow);
+  border-radius: 1.5rem;
+  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skiper-card:hover {
+  border-color: var(--skiper-border-hover);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+              0 14px 34px -4px rgba(0, 0, 0, 0.85);
+}
+
+/* Subtle Satin Inner Surface */
+.skiper-subsurface {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+}
+
+/* Soft Matte Input */
+.skiper-input {
+  background: #111114 !important;
+  color: #ededed !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 0.875rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.skiper-input::placeholder {
+  color: #52525b !important;
+}
+
+.skiper-input:focus {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Primary Button (Refined High-Contrast Monochrome) */
+.skiper-btn-primary {
+  background: var(--skiper-btn-primary-bg) !important;
+  color: var(--skiper-btn-primary-fg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  font-weight: 700 !important;
+  border-radius: 0.875rem !important;
+  transition: background 0.2s ease, transform 0.15s ease !important;
+}
+
+.skiper-btn-primary:hover {
+  background: var(--skiper-btn-primary-hover) !important;
+}
+
+/* Secondary Button (Sleek Dark Glass) */
+.skiper-btn-secondary {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ededed !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.875rem !important;
+  transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+.skiper-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Header Glass */
+.skiper-header-glass {
+  background: rgba(8, 8, 10, 0.82) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Modal Dark Glass Container */
+.skiper-modal-dialog {
+  background: #0d0d10 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.95),
+              inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+  color: #ededed !important;
+}
+

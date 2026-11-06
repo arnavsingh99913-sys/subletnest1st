@@ -1,0 +1,19 @@
+{
+  "name": "subletnest-frontend",
+  "version": "1.0.0",
+  "description": "SubletNest Frontend Application - Noir Satin Black Theme, Skiper-UI Gestures & Onboarding",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 3000",
+    "dev": "npx serve -l 3000"
+  },
+  "keywords": [
+    "subletnest",
+    "skiper-ui",
+    "tailwind",
+    "shadcn"
+  ],
+  "author": "SubletNest",
+  "license": "MIT"
+}
+

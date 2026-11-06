@@ -1,0 +1,202 @@
+/* ==========================================================================
+   SKIPER-UI 43 BUTTON GESTURES & CURSOR-RESPONSIVE ENGINE
+   Inspired by: https://skiper-ui.com/v1/preview/skiper43
+   Features:
+   - Magnetic spring physics & 3D tilt tracking cursor position
+   - Dynamic cursor-following radial spotlight & specular sheen (--mouse-x, --mouse-y)
+   - Spring-damped tactile compression on press & elastic bounce on release
+   - Floating Vercel-style Tooltip Pill with spring inertia and keyboard badges
+   - Dynamic cursor-anchored click ripple
+   ========================================================================== */
+
+/* Universal Button Enhancements */
+button,
+a[role="button"],
+.ob-btn-primary,
+.ob-btn-google,
+.ob-locality-chip,
+.area-shortlist-chip,
+.btn-shortlist,
+.main-app-location-badge,
+input[type="submit"] {
+  position: relative;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.4, 1), 
+              box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.4, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Luminous Cursor Spotlight & Specular Sheen Overlay */
+.skiper-spotlight-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: radial-gradient(
+    circle 95px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    transparent 80%
+  );
+  mix-blend-mode: overlay;
+}
+
+/* Darker/Noir Satin Button Spotlight */
+.ob-stage .skiper-spotlight-overlay,
+.ob-auth-card .skiper-spotlight-overlay,
+#adminPortalModal .skiper-spotlight-overlay,
+.bg-slate-900 .skiper-spotlight-overlay,
+.bg-slate-800 .skiper-spotlight-overlay,
+.bg-brand-600 .skiper-spotlight-overlay,
+.skiper-card .skiper-spotlight-overlay,
+.ob-btn-primary .skiper-spotlight-overlay {
+  background: radial-gradient(
+    circle 110px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 80%
+  );
+  mix-blend-mode: screen;
+}
+
+/* Make spotlight active on hover */
+.skiper-active .skiper-spotlight-overlay {
+  opacity: 1;
+}
+
+/* Active Press Spring Compression */
+button:active,
+a[role="button"]:active,
+.ob-btn-primary:active,
+.ob-btn-google:active,
+.ob-locality-chip:active,
+.area-shortlist-chip:active,
+.btn-shortlist:active {
+  transform: scale(0.94) !important;
+  transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Click Ripple Layer */
+.skiper-ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 60%, transparent 80%);
+  animation: skiperRippleAnim 0.55s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+  z-index: 10;
+}
+
+@keyframes skiperRippleAnim {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   SKIPER43 FLOATING SPRING TOOLTIP PILL
+   Recreates Vercel Tooltip from skiper-ui.com/v1/preview/skiper43
+   ========================================================================== */
+#skiperTooltipPill {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(10, 12, 18, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding: 0.42rem 0.8rem;
+  border-radius: 9999px;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.95), 
+              0 0 16px rgba(255, 255, 255, 0.08),
+              inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transform: translate3d(-50%, -100%, 0) scale(0.92);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, left, top, opacity;
+  white-space: nowrap;
+}
+
+#skiperTooltipPill.visible {
+  opacity: 1;
+  transform: translate3d(-50%, -100%, 0) scale(1);
+}
+
+/* Tooltip Label Text */
+.skiper-tooltip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* Tooltip Keyboard / Key Hint Badge */
+.skiper-tooltip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.12rem 0.4rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ededed;
+  font-family: 'Inter', monospace;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Arrow indicator beneath pill */
+#skiperTooltipPill::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: rgba(10, 12, 18, 0.94);
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Inverted arrow when tooltip appears below button */
+#skiperTooltipPill.pill-bottom::after {
+  top: -4px;
+  bottom: auto;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Subtle glowing border animation on hovered skiper buttons */
+.skiper-active {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22), 
+              0 8px 24px -4px rgba(0, 0, 0, 0.85) !important;
+}
+

@@ -1,0 +1,60 @@
+@SubletNest_HostAddress = http://localhost:5170
+
+### Health Check
+GET {{SubletNest_HostAddress}}/api/health
+Accept: application/json
+
+###
+
+### Sign Up as a Leaser
+POST {{SubletNest_HostAddress}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "name": "Rohan Sharma",
+  "contact": "+91 9876543210",
+  "email": "rohan@example.com",
+  "password": "Password@123",
+  "role": "Primary Leaseholder"
+}
+
+###
+
+### Login using Email
+POST {{SubletNest_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "rohan@example.com",
+  "password": "Password@123"
+}
+
+###
+
+### Login using Contact Number
+POST {{SubletNest_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "+91 9876543210",
+  "password": "Password@123"
+}
+
+###
+
+### Login using Name
+POST {{SubletNest_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "Rohan Sharma",
+  "password": "Password@123"
+}
+
+###
+
+### Get all users
+GET {{SubletNest_HostAddress}}/api/auth/users
+Accept: application/json
+
+###
