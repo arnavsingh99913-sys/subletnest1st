@@ -1,0 +1,20 @@
+# .NET build output
+bin/
+obj/
+*.user
+.vs/
+
+# Local SQLite database
+*.db
+*.db-shm
+*.db-wal
+
+# User-uploaded files
+frontend/uploads/
+
+# Node
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
