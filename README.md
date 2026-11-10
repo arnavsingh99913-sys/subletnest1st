@@ -1,68 +1,115 @@
-# SubletNest Fullstack Project
+# SubletNest
 
-**SubletNest** is a fullstack spare room subletting and leftover furniture inventory platform. The project is cleanly structured into two main standalone folders: `frontend` and `backend`.
+SubletNest is a marketplace for spare rooms in shared flats across India, listed together with the furniture the previous tenant is leaving behind.
 
-```
-subletdotnet backend/
-├── frontend/                  # Full Frontend Web Application
-│   ├── index.html             # Single-page application (Tailwind, Lucide, Noir theme)
-│   ├── onboarding/            # All-India States/Cities location radar & auth flow
-│   ├── skiper-gestures/       # Skiper-UI 43 cursor magnetic pull & floating tooltip
-│   ├── skiper-theme/          # Skiper-UI 87 pure CSS scroll-driven edge fade effect
-│   ├── uploads/               # Uploaded images and live camera snapshots
-│   ├── package.json           # Standalone frontend scripts
-│   └── README.md
-│
-├── backend/                   # Full Backend .NET 8 Web API
-│   ├── Controllers/           # Auth, Listings, Inquiries, and Upload controllers
-│   ├── Data/                  # SubletDbContext & SQLite Initializer
-│   ├── DTOs/                  # Request / Response models
-│   ├── Models/                # User, Listing, ListingAudit, RoomInquiry models
-│   ├── Properties/            # launchSettings.json (ports 5000 & 5170)
-│   ├── Program.cs             # ASP.NET Core startup & frontend auto-detection
-│   ├── SubletNest.csproj      # .NET 8 Project file
-│   ├── subletnest.db          # SQLite Database
-│   └── README.md
-│
-├── SubletNest.sln             # Root Visual Studio solution file
-├── index.html                 # Convenience entrypoint redirecting to frontend/
-└── README.md                  # Project overview
-```
+- **Backend:** ASP.NET Core (.NET 8) Web API with an SQLite database
+- **Frontend:** a single HTML page (Tailwind CSS and Lucide icons from a CDN), served by the backend
 
----
+## Run it on your computer
 
-## Getting Started
+### 1. Install the .NET 8 SDK
 
-### 1. Run the Backend & Frontend Together
-You can run the backend directly from root or from the `backend/` folder. The backend automatically detects the sibling `frontend/` directory and serves it:
+Download it from <https://dotnet.microsoft.com/download/dotnet/8.0>. Check it's installed:
 
 ```bash
-# From root directory:
-dotnet run --project backend
+dotnet --version
+```
 
-# Or inside backend directory:
+It should print `8.0.x` or later. You don't need Node.js or a database server.
+
+### 2. Get the code
+
+```bash
+git clone https://github.com/arnavsingh99913-sys/subletnest1st.git
+cd subletnest1st
+```
+
+### 3. Start the app
+
+Run it **from the `backend` folder**:
+
+```bash
 cd backend
 dotnet run
 ```
-* **Frontend App**: `http://localhost:5000/` (or `http://localhost:5170/`)
-* **API Health Check**: `http://localhost:5000/api/health`
-* **Swagger/API Endpoints**: `http://localhost:5000/api/listings`
 
----
+Then open **<http://localhost:5000>**.
 
-### 2. Run the Frontend Standalone (Optional)
-The frontend can also be served independently:
+The first run takes a minute while .NET downloads packages and builds the app.
+
+### What happens on first run
+
+- An SQLite database `backend/subletnest.db` is created, with 4 sample listings and an administrator account.
+- A `frontend/uploads/` folder is created for room photos.
+
+Neither is stored in Git, so every copy of the project starts with its own fresh data.
+
+> **Why run from `backend`?** The database path is relative to the folder you start in. `dotnet run --project backend` from the project root also works, but it creates a second, separate database in the root folder.
+
+### Port 5000 already in use?
+
+On macOS, AirPlay Receiver uses port 5000. Start the app on another port instead:
+
 ```bash
-cd frontend
-npx serve -l 3000
+dotnet run --urls http://localhost:5080
 ```
-It will automatically connect to the backend running at `http://localhost:5000`.
 
----
+Then open <http://localhost:5080>. The page always talks to the server it was loaded from, so any port works.
 
-## Features
-- **Skiper-UI 87 Aesthetic**: Soft matte noir black palette, satin card depth, and scroll-driven edge fade masks.
-- **Skiper-UI 43 Gestures**: Cursor-responsive magnetic tilt, dynamic specular sheen, and floating spring tooltip pill.
-- **Location Selector**: All Indian states and cities with skippable area search.
-- **Leaser & Admin Auth**: Leaser sign-up/in and Master Admin portal (`arnavsingh99913@gmail.com` / `Arnav$123`).
-- **Live Camera & Uploads**: Upload or take live photos saved directly to `frontend/uploads`.
+## Using the app
+
+1. **Choose a location.** On the first visit you pick a state, a city and, optionally, an area. Use the location pill in the header to change it later.
+2. **Browse.** Without an account you can see one matching room. Sign in to see them all.
+3. **Create an account** as one of:
+
+   | Account | Can do |
+   |---|---|
+   | **Buyer**: looking for a room | See all listings, save rooms, send inquiries to sellers, track replies under **My Inquiries** |
+   | **Seller**: has a room to let | List rooms with photos and furniture, edit or remove them, accept or decline inquiries under **My Listings** |
+
+An administrator account is created on first run; it can do both, plus open the admin portal (all users and listing history). Its login is set in `backend/Data/DbInitializer.cs`. Change it before you put the app anywhere other people can reach.
+
+## Project layout
+
+```
+subletnest1st/
+├── backend/                  # .NET 8 Web API (also serves the frontend)
+│   ├── Controllers/          # Auth, Listings, Inquiries, Upload
+│   ├── Data/                 # EF Core DbContext and first-run seeding
+│   ├── DTOs/                 # Request / response models
+│   ├── Models/               # Database entities
+│   ├── Program.cs            # Startup: database, CORS, static files
+│   └── SubletNest.csproj
+├── frontend/
+│   ├── index.html            # The whole app page
+│   ├── onboarding/           # Location picker, sign-in / sign-up, admin portal
+│   ├── skiper-gestures/      # Button hover and press effects
+│   └── skiper-theme/         # Dark theme and scroll fades
+├── index.html                # Redirects to frontend/ if opened directly
+└── SubletNest.sln
+```
+
+## API
+
+All endpoints are under `/api`:
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| GET | `/api/listings` | List rooms (filters: `search`, `city`, `bhk`, `roomType`, `maxBudget`, `furnishing`, `tenantEmail`) |
+| GET / POST / PUT / DELETE | `/api/listings/{id}` | Read, create, update or remove a room |
+| POST | `/api/auth/signup` | Create a Buyer or Seller account |
+| POST | `/api/auth/login` | Sign in with name, email or phone, plus password |
+| POST | `/api/inquiries` | Send an inquiry about a room |
+| GET | `/api/inquiries/sent?seekerEmail=` | Inquiries a buyer has sent |
+| GET | `/api/inquiries/my-inquiries?tenantEmail=` | Inquiries a seller has received |
+| PUT | `/api/inquiries/{id}/status` | Accept or decline an inquiry |
+| POST | `/api/upload`, `/api/upload/camera` | Upload a photo file or a camera snapshot |
+
+## Known limitations
+
+This is a demo, not production-ready:
+
+- **No server-side sessions.** The browser remembers who is signed in, and the API doesn't check who is calling. For example, the one-listing limit for guests is applied in the page only.
+- **Google sign-in is simulated.** It asks for an email address and doesn't contact Google.
+- **The admin password is in the source code** and is reset on every start.

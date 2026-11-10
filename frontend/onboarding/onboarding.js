@@ -949,10 +949,11 @@
     el.classList.add('hidden');
   }
 
+  // Same rule as index.html: use the server that served the page, except when opened
+  // as a file or from the standalone frontend server on port 3000.
   function getApiBase() {
-    return (window.location.origin.includes('localhost:') || window.location.origin.includes('127.0.0.1:')) && !window.location.port.match(/^(5170|5199|5000|5001)$/)
-      ? 'http://localhost:5170' 
-      : (window.location.protocol === 'file:' ? 'http://localhost:5170' : '');
+    if (window.location.protocol === 'file:' || window.location.port === '3000') return 'http://localhost:5000';
+    return '';
   }
 
   // =========================================================================
