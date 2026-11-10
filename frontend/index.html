@@ -1,13 +1,1071 @@
-<!-- SubletNest Fullstack Project -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=frontend/index.html" />
-  <script>window.location.href = "frontend/index.html";</script>
-  <title>SubletNest - Redirecting...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubletNest</title>
+  <meta name="description" content="Spare room sublets with leftover furniture across India.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+  <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 400: '#d4d4d8', 500: '#a1a1aa', 600: '#e4e4e7', 700: '#f4f4f5' }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="skiper-theme/skiper87.css">
+  <link rel="stylesheet" href="skiper-gestures/skiper-gestures.css">
+  <link rel="stylesheet" href="onboarding/onboarding.css">
+
+  <style>
+    html, body { background: #080808; color: #ededed; font-family: 'Inter', system-ui, sans-serif; }
+    .stage-hidden { display: none !important; }
+    .stage-active { display: flex; }
+    .main-app-location-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;
+      padding: 0.35rem 0.75rem; border-radius: 9999px; font-size: 0.75rem;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .main-app-location-badge:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); }
+    .main-app-location-badge .text-slate-800 { color: #ededed; }
+    #mainNavbarLocationPill { min-width: 2.6rem; flex: 0 1 auto; overflow: hidden; }
+    .main-app-location-badge { max-width: 100%; min-width: 0; }
+    @media (max-width: 640px) {
+      .main-app-location-badge > span:not(.loc-dot) { display: none; } /* icon-only location pill */
+      #mainNavbarLocationPill { flex-shrink: 0; min-width: auto; }
+      .nav-btn { padding: 0.45rem 0.55rem; }
+    }
+    .loc-dot { width: 6px; height: 6px; border-radius: 9999px; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .nav-btn { padding: 0.5rem 0.9rem; border-radius: 0.75rem; font-size: 0.8rem; font-weight: 600; color: #a1a1aa; display: inline-flex; align-items: center; gap: 0.4rem; position: relative; overflow: hidden; }
+    .nav-btn:hover { color: #ededed; background: rgba(255,255,255,0.05); }
+    .nav-btn.active { color: #09090b; background: #f4f4f5; }
+    .filter-select { padding: 0.6rem 2.25rem 0.6rem 0.9rem; font-size: 0.8rem; }
+    .area-shortlist-chip { padding: 0.3rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #a1a1aa; position: relative; overflow: hidden; }
+    .area-shortlist-chip:hover { color: #ededed; border-color: rgba(255,255,255,0.2); }
+    .tag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.55rem; border-radius: 9999px; font-size: 0.68rem; font-weight: 600; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #d4d4d8; }
+    .field-label { display: block; font-size: 0.72rem; font-weight: 600; color: #a1a1aa; margin-bottom: 0.35rem; letter-spacing: 0.02em; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto; }
+    .modal-overlay.hidden { display: none; }
+    #toastHost { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 11000; display: flex; flex-direction: column; gap: 0.5rem; max-width: calc(100vw - 2.5rem); }
+    .toast { background: #111114; border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 0.75rem 1rem; box-shadow: 0 12px 32px rgba(0,0,0,0.8); min-width: 240px; animation: toastIn .3s cubic-bezier(.16,1,.3,1); }
+    .toast.error { border-color: rgba(244,63,94,0.5); }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    #mainAppContainer { transition: opacity .4s ease; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
 </head>
-<body style="background:#080808; color:#ededed; font-family:sans-serif; display:flex; align-items:center; justify-content:center; height:100vh;">
-  <p>Launching SubletNest Frontend... <a href="frontend/index.html" style="color:#f4f4f5;">Click here if not redirected</a>.</p>
+<body class="min-h-screen antialiased">
+
+  <!-- =====================================================================
+       ONBOARDING: LOCATION SELECTION (State → City → optional Area)
+       ===================================================================== -->
+  <div id="onboardingContainer" class="ob-hidden">
+    <div class="ob-grid-bg"></div>
+
+    <div class="ob-progress-hud">
+      <div class="ob-step-node" data-step="1"><div class="ob-step-badge">1</div><span>Choose Location</span></div>
+      <div class="ob-step-connector"></div>
+      <div class="ob-step-node" data-step="2"><div class="ob-step-badge">2</div><span>Explore Sublets</span></div>
+    </div>
+
+    <section id="step-location" class="stage-hidden">
+      <div class="ob-location-center-wrapper">
+        <div class="ob-location-card">
+          <div class="flex items-center gap-3 mb-1">
+            <div class="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-900 flex items-center justify-center"><i data-lucide="home" class="w-5 h-5"></i></div>
+            <div>
+              <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Where are you looking?</h1>
+              <p class="text-xs text-zinc-400">Spare rooms with leftover furniture, across all 36 States &amp; UTs.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4 mt-6">
+            <div>
+              <label class="field-label" for="obStateDropdown">1. State or Union Territory</label>
+              <select id="obStateDropdown" class="ob-glass-select" onchange="window.onboardingManager.handleStateDropdownChange(this.value)"></select>
+            </div>
+            <div>
+              <label class="field-label" for="obCityDropdown">2. City</label>
+              <select id="obCityDropdown" class="ob-glass-select" disabled onchange="window.onboardingManager.handleCityDropdownChange(this.value)">
+                <option value="">-- 🏙️ Select State First --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="flex items-center justify-between">
+              <label class="field-label" for="obAreaInput">3. Area, street or locality <span class="text-zinc-600">(optional)</span></label>
+              <button id="obSkipAreaBtn" type="button" class="ob-skip-area-btn hidden mb-1.5" onclick="window.onboardingManager.confirmLocationAndLaunch(true)">
+                <i data-lucide="skip-forward" class="w-3 h-3"></i> Skip &amp; view all
+              </button>
+            </div>
+            <div class="relative">
+              <input id="obAreaInput" type="text" class="ob-glass-input pr-10" placeholder="e.g. Koramangala, MG Road, Sector 62" disabled
+                     oninput="window.onboardingManager.handleAreaInputChange(this.value)"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();window.onboardingManager.confirmLocationAndLaunch(false);}">
+              <button id="obClearAreaBtn" type="button" aria-label="Clear area" class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-zinc-400 hover:text-white" onclick="window.onboardingManager.clearAreaInput()">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="obLocalityChipsContainer" class="hidden mt-4">
+            <p class="text-[11px] text-zinc-500 mb-2">Popular in <span id="obChipsCityName" class="text-zinc-300 font-semibold"></span></p>
+            <div id="obLocalityChipsList" class="flex flex-wrap gap-2 skiper87-scroll-x"></div>
+          </div>
+
+          <p id="obSelectionSummary" class="text-xs text-zinc-400 mt-5 min-h-[1rem]">Choose a State and City above to explore available rooms.</p>
+
+          <button id="obConfirmLocationBtn" type="button" class="ob-btn-primary mt-4 opacity-40 cursor-not-allowed" disabled onclick="window.onboardingManager.confirmLocationAndLaunch(false)">
+            <span id="obConfirmBtnText">Select City to Explore Sublets</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =====================================================================
+       MAIN APP
+       ===================================================================== -->
+  <div id="mainAppContainer" class="opacity-0 pointer-events-none min-h-screen flex flex-col">
+
+    <header class="skiper-header-glass sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-2 sm:gap-3">
+        <a href="#" onclick="switchView('explore');return false;" class="flex items-center gap-2 shrink-0">
+          <span class="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-900 flex items-center justify-center"><i data-lucide="home" class="w-4 h-4"></i></span>
+          <span class="font-extrabold tracking-tight hidden sm:inline">SubletNest</span>
+        </a>
+        <div id="mainNavbarLocationPill" class="flex items-center"></div>
+
+        <div class="relative flex-1 max-w-md hidden md:block ml-2">
+          <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="globalSearchInput" type="search" class="skiper-input w-full pl-9 pr-3 py-2 text-sm" placeholder="Search area, street, furniture…"
+                 oninput="syncSearch(this.value, 'global')">
+        </div>
+
+        <nav class="flex items-center gap-0.5 sm:gap-1 ml-auto shrink-0">
+          <button id="navBtnExplore" class="nav-btn active" onclick="switchView('explore')"><i data-lucide="compass" class="w-4 h-4"></i><span class="hidden lg:inline">Explore</span></button>
+          <button id="btnShortlistToggle" class="nav-btn" onclick="switchView('saved')"><i data-lucide="heart" class="w-4 h-4"></i><span class="hidden lg:inline">Saved</span> <span id="savedCountBadge" class="text-[10px] font-bold px-1.5 rounded-full bg-white/10">0</span></button>
+          <button id="navBtnList" class="nav-btn" onclick="switchView('create')"><i data-lucide="plus-circle" class="w-4 h-4"></i><span class="hidden lg:inline">List a Room</span></button>
+          <div id="authNavArea" class="flex items-center gap-1 ml-1"></div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
+
+      <!-- ===================== EXPLORE VIEW ===================== -->
+      <section id="view-explore">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5">
+          <div>
+            <h2 class="text-2xl font-extrabold tracking-tight">Spare rooms, ready to move in</h2>
+            <p class="text-sm text-zinc-400">Rooms in shared flats, with the furniture the last tenant left behind.</p>
+          </div>
+          <p id="resultsCount" class="text-xs text-zinc-500"></p>
+        </div>
+
+        <div class="skiper-card p-4 mb-6">
+          <div class="relative mb-3">
+            <i data-lucide="map-pin" class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="areaSchemeSearchInput" type="search" class="skiper-input w-full pl-9 pr-10 py-2.5 text-sm" placeholder="Shortlist by area, street, locality or furniture (e.g. Indiranagar desk)"
+                   oninput="syncSearch(this.value, 'area')">
+            <button id="btnClearAreaSearch" type="button" aria-label="Clear search" class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-zinc-400 hover:text-white" onclick="clearSearch()">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+            <select id="filterCity" class="ob-glass-select filter-select" onchange="fetchMarketplaceListings()">
+              <option value="all">All cities</option>
+              <option value="Bengaluru">Bengaluru</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Gurugram">Gurugram</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Kolkata">Kolkata</option>
+              <option value="Noida">Noida</option>
+            </select>
+            <select id="filterBhk" class="ob-glass-select filter-select" onchange="fetchMarketplaceListings()">
+              <option value="all">Any BHK</option>
+              <option value="1 BHK">1 BHK</option>
+              <option value="2 BHK">2 BHK</option>
+              <option value="3 BHK">3 BHK</option>
+              <option value="4 BHK">4+ BHK</option>
+            </select>
+            <select id="filterRoomType" class="ob-glass-select filter-select" onchange="fetchMarketplaceListings()">
+              <option value="all">Any room</option>
+              <option value="private">Private room</option>
+              <option value="master">Master bedroom</option>
+              <option value="shared">Shared room</option>
+              <option value="entire">Entire portion</option>
+            </select>
+            <select id="filterBudget" class="ob-glass-select filter-select" onchange="fetchMarketplaceListings()">
+              <option value="0">Any budget</option>
+              <option value="10000">Up to ₹10,000</option>
+              <option value="15000">Up to ₹15,000</option>
+              <option value="20000">Up to ₹20,000</option>
+              <option value="30000">Up to ₹30,000</option>
+            </select>
+            <select id="filterFurnishing" class="ob-glass-select filter-select" onchange="fetchMarketplaceListings()">
+              <option value="all">Any furniture</option>
+              <option value="Has Study Setup">Has study setup</option>
+              <option value="Has AC">Has AC</option>
+            </select>
+            <button id="btnResetFilters" type="button" class="skiper-btn-secondary px-3 py-2 text-xs font-semibold inline-flex items-center justify-center gap-1.5 relative overflow-hidden" onclick="resetFilters()">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+            </button>
+          </div>
+          <div id="areaChipsRow" class="flex flex-wrap gap-2 mt-3"></div>
+        </div>
+
+        <div id="listingsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </section>
+
+      <!-- ===================== SAVED VIEW ===================== -->
+      <section id="view-saved" class="hidden">
+        <h2 class="text-2xl font-extrabold tracking-tight mb-1">Saved rooms</h2>
+        <p class="text-sm text-zinc-400 mb-5">Rooms you've shortlisted on this device.</p>
+        <div id="savedGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </section>
+
+      <!-- ===================== CREATE LISTING VIEW ===================== -->
+      <section id="view-create" class="hidden">
+        <div class="max-w-3xl mx-auto">
+          <h2 id="createViewTitle" class="text-2xl font-extrabold tracking-tight mb-1">List your spare room</h2>
+          <p class="text-sm text-zinc-400 mb-5">Find a flatmate and pass on the furniture you're leaving behind.</p>
+
+          <form id="createListingForm" class="skiper-card p-5 sm:p-6 space-y-5" onsubmit="submitListing(event)">
+            <input type="hidden" id="editListingId" value="">
+            <div>
+              <label class="field-label" for="clTitle">Listing title *</label>
+              <input id="clTitle" class="ob-glass-input" required maxlength="140" placeholder="e.g. Master bedroom in 2 BHK with study desk">
+            </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="field-label" for="clLocation">Location (area, city) *</label>
+                <input id="clLocation" class="ob-glass-input" required placeholder="e.g. Indiranagar, Bengaluru">
+              </div>
+              <div>
+                <label class="field-label" for="clAvailable">Available from</label>
+                <input id="clAvailable" class="ob-glass-input" placeholder="Immediate Move-in">
+              </div>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="field-label" for="clBhk">Flat size</label>
+                <select id="clBhk" class="ob-glass-select">
+                  <option>1 BHK</option><option selected>2 BHK</option><option>3 BHK</option><option>4 BHK</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label" for="clOffering">What you're offering</label>
+                <select id="clOffering" class="ob-glass-select">
+                  <option>1 Private Bedroom</option>
+                  <option>1 Master Bed with Attached Bath</option>
+                  <option>1 Shared Bed in Double Room</option>
+                  <option>Entire 1 BHK Portion</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label class="field-label" for="clRent">Monthly rent (₹) *</label>
+                <input id="clRent" type="number" min="1" class="ob-glass-input" required placeholder="16500">
+              </div>
+              <div>
+                <label class="field-label" for="clDeposit">Deposit (₹)</label>
+                <input id="clDeposit" type="number" min="0" class="ob-glass-input" placeholder="35000">
+              </div>
+              <div>
+                <label class="field-label" for="clBills">Bills</label>
+                <select id="clBills" class="ob-glass-select">
+                  <option>Split 50/50 evenly</option><option>Included in Rent</option><option>Paid separately</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="field-label" for="clCondition">Furniture condition</label>
+              <select id="clCondition" class="ob-glass-select">
+                <option>Brand New</option><option selected>Gently Used - Great</option><option>Well Maintained</option><option>Functional / Fair</option>
+              </select>
+            </div>
+
+            <!-- Photos -->
+            <div>
+              <label class="field-label">Photos</label>
+              <div id="photoPreviewList" class="flex flex-wrap gap-2 mb-2"></div>
+              <div class="flex flex-wrap gap-2">
+                <label class="skiper-btn-secondary px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="image-plus" class="w-4 h-4"></i> Upload photos
+                  <input id="clPhotoInput" type="file" accept="image/*" multiple class="hidden" onchange="uploadSelectedPhotos(this.files)">
+                </label>
+                <button type="button" class="skiper-btn-secondary px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5" onclick="openCamera()">
+                  <i data-lucide="camera" class="w-4 h-4"></i> Take a photo
+                </button>
+              </div>
+            </div>
+
+            <!-- Inventory -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="field-label mb-0">Furniture left behind</label>
+                <button type="button" class="text-xs font-semibold text-zinc-300 hover:text-white inline-flex items-center gap-1" onclick="addInventoryRow()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add item</button>
+              </div>
+              <div id="inventoryRows" class="space-y-2"></div>
+            </div>
+
+            <div>
+              <label class="field-label" for="clShared">Shared amenities <span class="text-zinc-600">(comma separated)</span></label>
+              <input id="clShared" class="ob-glass-input" placeholder="Fridge, Washing Machine, Wi-Fi">
+            </div>
+
+            <div>
+              <label class="field-label" for="clPhone">Contact phone</label>
+              <input id="clPhone" class="ob-glass-input" placeholder="+91 98765 43210">
+              <p class="text-[11px] text-zinc-500 mt-1">Listed as <span id="clHostLabel" class="text-zinc-300"></span></p>
+            </div>
+
+            <p id="createListingError" class="hidden text-xs text-rose-400"></p>
+            <div class="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-2">
+              <button id="btnCancelPublish" type="button" class="skiper-btn-secondary px-4 py-2.5 text-sm font-semibold" onclick="cancelCreate()">Cancel</button>
+              <button id="btnPublishListing" type="submit" class="ob-btn-primary sm:w-auto px-6"><i data-lucide="send" class="w-4 h-4"></i> <span id="btnPublishText">Publish listing</span></button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===================== MY LISTINGS VIEW ===================== -->
+      <section id="view-profile" class="hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-2xl font-extrabold tracking-tight">My listings</h2>
+            <p id="profileSubtitle" class="text-sm text-zinc-400"></p>
+          </div>
+          <button type="button" class="ob-btn-primary sm:w-auto px-5" onclick="switchView('create')"><i data-lucide="plus" class="w-4 h-4"></i> New listing</button>
+        </div>
+        <div id="myListingsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10"></div>
+
+        <h3 class="text-lg font-bold mb-3">Inquiries received</h3>
+        <div id="myInquiriesList" class="space-y-3"></div>
+      </section>
+    </main>
+
+    <footer class="border-t border-white/5 py-6 text-center text-xs text-zinc-500">
+      SubletNest · Spare rooms &amp; leftover furniture across India
+    </footer>
+  </div>
+
+  <!-- =====================================================================
+       LISTING DETAIL MODAL
+       ===================================================================== -->
+  <div id="listingDetailModal" class="modal-overlay hidden" onclick="if(event.target===this)closeListingDetail()">
+    <div class="skiper-modal-dialog w-full max-w-3xl rounded-3xl overflow-hidden">
+      <div id="listingDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       CAMERA MODAL
+       ===================================================================== -->
+  <div id="cameraModal" class="modal-overlay hidden">
+    <div class="skiper-modal-dialog w-full max-w-lg rounded-3xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold">Take a photo</h3>
+        <button type="button" aria-label="Close camera" class="p-1.5 rounded-lg text-zinc-400 hover:text-white" onclick="closeCamera()"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <video id="cameraVideo" autoplay playsinline muted class="w-full rounded-2xl bg-black aspect-video object-cover"></video>
+      <p id="cameraError" class="hidden text-xs text-rose-400 mt-2"></p>
+      <button type="button" class="ob-btn-primary mt-4" onclick="captureCameraPhoto()"><i data-lucide="aperture" class="w-4 h-4"></i> Capture</button>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       AUTH MODAL (used by onboarding.js)
+       ===================================================================== -->
+  <div id="obAuthModal" class="ob-auth-modal-overlay hidden" onclick="if(event.target===this)window.onboardingManager.closeAuthModal()">
+    <div class="ob-auth-card">
+      <button type="button" aria-label="Close" class="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-400 hover:text-white" onclick="window.onboardingManager.closeAuthModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+
+      <!-- Login -->
+      <div id="obLoginFormBox">
+        <h3 class="text-xl font-extrabold">Sign in</h3>
+        <p class="text-xs text-zinc-400 mb-5">Sign in to list rooms and manage your listings.</p>
+        <button type="button" class="ob-btn-google btnGoogleSignIn"><span class="font-bold text-base">G</span> Continue with Google</button>
+        <div class="flex items-center gap-3 my-4 text-[11px] text-zinc-600"><div class="flex-1 h-px bg-white/10"></div>or<div class="flex-1 h-px bg-white/10"></div></div>
+        <form id="obLoginForm" class="space-y-3">
+          <div>
+            <label class="field-label" for="obLoginIdentifier">Name, email or phone</label>
+            <input id="obLoginIdentifier" class="ob-glass-input" autocomplete="username">
+          </div>
+          <div>
+            <label class="field-label" for="obLoginPassword">Password</label>
+            <input id="obLoginPassword" type="password" class="ob-glass-input" autocomplete="current-password">
+          </div>
+          <p id="obLoginError" class="hidden text-xs text-rose-400"></p>
+          <button id="obLoginSubmitBtn" type="submit" class="ob-btn-primary"><i data-lucide="log-in" class="w-4 h-4"></i> Sign In to SubletNest</button>
+        </form>
+        <p class="text-xs text-zinc-400 mt-4 text-center">New here? <button id="obBtnSwitchSignup" type="button" class="font-semibold text-white hover:underline">Create an account</button></p>
+      </div>
+
+      <!-- Sign up -->
+      <div id="obSignupFormBox" class="hidden">
+        <h3 class="text-xl font-extrabold">Create your account</h3>
+        <p class="text-xs text-zinc-400 mb-5">All fields are required.</p>
+        <button type="button" class="ob-btn-google btnGoogleSignIn"><span class="font-bold text-base">G</span> Continue with Google</button>
+        <div class="flex items-center gap-3 my-4 text-[11px] text-zinc-600"><div class="flex-1 h-px bg-white/10"></div>or<div class="flex-1 h-px bg-white/10"></div></div>
+        <form id="obSignupForm" class="space-y-3">
+          <div>
+            <label class="field-label" for="obSignupName">Full name</label>
+            <input id="obSignupName" class="ob-glass-input" autocomplete="name">
+          </div>
+          <div>
+            <label class="field-label" for="obSignupContact">Phone number</label>
+            <input id="obSignupContact" class="ob-glass-input" autocomplete="tel">
+          </div>
+          <div>
+            <label class="field-label" for="obSignupEmail">Email</label>
+            <input id="obSignupEmail" type="email" class="ob-glass-input" autocomplete="email">
+          </div>
+          <div>
+            <label class="field-label" for="obSignupPassword">Password</label>
+            <input id="obSignupPassword" type="password" class="ob-glass-input" autocomplete="new-password">
+          </div>
+          <p id="obSignupError" class="hidden text-xs text-rose-400"></p>
+          <button id="obSignupSubmitBtn" type="submit" class="ob-btn-primary"><i data-lucide="user-plus" class="w-4 h-4"></i> Complete Registration</button>
+        </form>
+        <p class="text-xs text-zinc-400 mt-4 text-center">Already registered? <button id="obBtnSwitchLogin" type="button" class="font-semibold text-white hover:underline">Sign in</button></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       ADMIN PORTAL (used by onboarding.js)
+       ===================================================================== -->
+  <div id="adminPortalModal" class="ob-auth-modal-overlay hidden" onclick="if(event.target===this)window.onboardingManager.closeAdminPortal()">
+    <div class="admin-modal-dialog">
+      <div class="flex items-center justify-between px-5 pt-5 pb-3">
+        <div>
+          <h3 class="text-lg font-extrabold flex items-center gap-2"><i data-lucide="shield" class="w-5 h-5"></i> Admin portal</h3>
+          <p class="text-xs text-zinc-400">Registered users and listing history.</p>
+        </div>
+        <button type="button" aria-label="Close admin portal" class="p-1.5 rounded-lg text-zinc-400 hover:text-white" onclick="window.onboardingManager.closeAdminPortal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="flex border-b border-white/10 px-3">
+        <button id="adminTabBtnUsers" type="button" class="admin-nav-tab active" onclick="window.onboardingManager.switchAdminTab('users')">Users</button>
+        <button id="adminTabBtnAudit" type="button" class="admin-nav-tab" onclick="window.onboardingManager.switchAdminTab('audit')">Listing history</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-5">
+        <div id="adminPanelUsers">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <p id="adminUsersCount" class="text-xs text-zinc-400"></p>
+            <div class="relative sm:w-72">
+              <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="search" class="admin-search-input" placeholder="Search name, phone or email" oninput="window.onboardingManager.handleAdminUserSearch(this.value)">
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="text-[11px] uppercase tracking-wide text-zinc-500 border-b border-white/10">
+                <tr><th class="py-2 px-3">User</th><th class="py-2 px-3">Phone</th><th class="py-2 px-3">Email</th><th class="py-2 px-3">Role</th><th class="py-2 px-3">Joined</th></tr>
+              </thead>
+              <tbody id="adminUsersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="adminPanelAudit" class="hidden">
+          <p id="adminAuditCount" class="text-xs text-zinc-400 mb-3"></p>
+          <div id="adminAuditListContainer" class="space-y-2.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastHost" aria-live="polite"></div>
+
+  <!-- =====================================================================
+       APP LOGIC (defines the window.* hooks onboarding.js calls)
+       ===================================================================== -->
+  <script>
+  (function () {
+    'use strict';
+
+    // ---------- helpers ----------
+    function getApiBase() {
+      const o = window.location.origin;
+      if (window.location.protocol === 'file:') return 'http://localhost:5170';
+      if ((o.includes('localhost:') || o.includes('127.0.0.1:')) && !window.location.port.match(/^(5170|5199|5000|5001)$/)) return 'http://localhost:5170';
+      return '';
+    }
+    const API = getApiBase();
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function imgUrl(u) {
+      if (!u) return '';
+      return u.startsWith('/') ? API + u : u;
+    }
+    function rupees(n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); }
+    function $(id) { return document.getElementById(id); }
+    function icons() { if (window.lucide) window.lucide.createIcons(); }
+
+    async function api(path, opts = {}) {
+      const res = await fetch(API + path, {
+        ...opts,
+        headers: opts.body && !(opts.body instanceof FormData) ? { 'Content-Type': 'application/json', ...(opts.headers || {}) } : opts.headers
+      });
+      let data = null;
+      try { data = await res.json(); } catch (e) { /* empty body */ }
+      if (!res.ok) throw new Error((data && data.message) || `Request failed (${res.status})`);
+      return data;
+    }
+
+    function getUser() {
+      if (window.currentUser) return window.currentUser;
+      try { return JSON.parse(localStorage.getItem('subletnest_user') || 'null'); } catch (e) { return null; }
+    }
+
+    // ---------- toast ----------
+    window.showToast = function (title, message, type) {
+      const host = $('toastHost');
+      const el = document.createElement('div');
+      el.className = 'toast' + (type === 'error' ? ' error' : '');
+      el.innerHTML = `<p class="text-sm font-bold">${esc(title)}</p>${message ? `<p class="text-xs text-zinc-400 mt-0.5">${esc(message)}</p>` : ''}`;
+      host.appendChild(el);
+      setTimeout(() => el.remove(), 3800);
+    };
+
+    // ---------- auth nav ----------
+    window.renderAuthNav = function () {
+      const area = $('authNavArea');
+      const user = getUser();
+      window.currentUser = user;
+      if (!user) {
+        area.innerHTML = `<button type="button" class="skiper-btn-secondary px-3 py-2 text-xs font-semibold inline-flex items-center gap-1.5" onclick="window.onboardingManager.openAuthModal('login')"><i data-lucide="log-in" class="w-4 h-4"></i><span class="hidden sm:inline">Sign in</span></button>`;
+      } else {
+        const isAdmin = user.role === 'Administrator';
+        area.innerHTML = `
+          ${isAdmin ? `<button type="button" class="nav-btn" title="Admin portal" onclick="window.onboardingManager.openAdminPortal()"><i data-lucide="shield" class="w-4 h-4"></i></button>` : ''}
+          <button id="navBtnProfile" type="button" class="nav-btn" title="My listings" onclick="switchView('profile')">
+            <span class="w-6 h-6 rounded-full bg-zinc-100 text-zinc-900 text-[10px] font-extrabold flex items-center justify-center">${esc(user.initials || 'ME')}</span>
+            <span class="hidden lg:inline">${esc((user.name || '').split(' ')[0])}</span>
+          </button>
+          <button type="button" class="nav-btn" title="Sign out" onclick="window.onboardingManager.handleOnboardingLogout(); switchView('explore');"><i data-lucide="log-out" class="w-4 h-4"></i></button>`;
+      }
+      icons();
+    };
+
+    // ---------- views ----------
+    const VIEWS = ['explore', 'saved', 'create', 'profile'];
+    const NAV_FOR_VIEW = { explore: 'navBtnExplore', saved: 'btnShortlistToggle', create: 'navBtnList', profile: 'navBtnProfile' };
+
+    window.switchView = function (view) {
+      if ((view === 'create' || view === 'profile') && !getUser()) {
+        window.onboardingManager.openAuthModal('login', view === 'create' ? 'create' : null);
+        return;
+      }
+      if (view === 'create' && !$('editListingId').value) resetCreateForm();
+      VIEWS.forEach(v => $('view-' + v).classList.toggle('hidden', v !== view));
+      Object.values(NAV_FOR_VIEW).forEach(id => { const b = $(id); if (b) b.classList.remove('active'); });
+      const nav = $(NAV_FOR_VIEW[view]); if (nav) nav.classList.add('active');
+      if (view === 'saved') renderSaved();
+      if (view === 'profile') loadProfile();
+      if (view === 'create') $('clHostLabel').textContent = `${getUser().name} (${getUser().email})`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      icons();
+    };
+
+    // ---------- saved / shortlist ----------
+    function getSaved() { try { return JSON.parse(localStorage.getItem('subletnest_saved') || '[]'); } catch (e) { return []; } }
+    function setSaved(ids) { try { localStorage.setItem('subletnest_saved', JSON.stringify(ids)); } catch (e) {} updateSavedBadge(); }
+    function updateSavedBadge() { $('savedCountBadge').textContent = getSaved().length; }
+    window.toggleSaved = function (id, ev) {
+      if (ev) ev.stopPropagation();
+      const ids = getSaved();
+      const i = ids.indexOf(id);
+      if (i >= 0) { ids.splice(i, 1); showToast('Removed from saved'); } else { ids.push(id); showToast('Saved', 'Find it under Saved.'); }
+      setSaved(ids);
+      document.querySelectorAll(`[data-save-id="${id}"]`).forEach(b => b.classList.toggle('text-rose-400', ids.includes(id)));
+      if (!$('view-saved').classList.contains('hidden')) renderSaved();
+    };
+
+    // ---------- marketplace ----------
+    let listingsCache = [];
+    let fetchSeq = 0;
+    let searchTimer = null;
+
+    function currentLocation() {
+      try { return JSON.parse(localStorage.getItem('subletnest_location') || 'null'); } catch (e) { return null; }
+    }
+
+    window.fetchMarketplaceListings = async function () {
+      const seq = ++fetchSeq;
+      const params = new URLSearchParams();
+      const search = $('areaSchemeSearchInput').value.trim();
+      const city = $('filterCity').value;
+      if (search) params.set('search', search);
+      if (city && city !== 'all') params.set('city', city);
+      ['bhk:filterBhk', 'roomType:filterRoomType', 'furnishing:filterFurnishing'].forEach(p => {
+        const [k, id] = p.split(':'); const v = $(id).value; if (v && v !== 'all') params.set(k, v);
+      });
+      const budget = Number($('filterBudget').value); if (budget > 0) params.set('maxBudget', budget);
+
+      const grid = $('listingsGrid');
+      grid.innerHTML = Array.from({ length: 3 }).map(() => `<div class="skiper-card h-80 animate-pulse"></div>`).join('');
+      try {
+        const data = await api('/api/listings?' + params.toString());
+        if (seq !== fetchSeq) return;
+        listingsCache = data || [];
+        renderListings(listingsCache);
+      } catch (err) {
+        if (seq !== fetchSeq) return;
+        grid.innerHTML = `<div class="col-span-full skiper-card p-8 text-center"><p class="font-semibold">Couldn't load listings</p><p class="text-xs text-zinc-400 mt-1">${esc(err.message)}. Is the backend running on port 5000?</p></div>`;
+        $('resultsCount').textContent = '';
+      }
+      renderAreaChips();
+    };
+    window.applyLocalFiltersAndRender = window.fetchMarketplaceListings;
+
+    function cardHtml(l) {
+      const saved = getSaved().includes(l.id);
+      const cover = imgUrl((l.images || [])[0]) || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
+      const inv = (l.inventory || []).slice(0, 3).map(i => `<span class="tag">${esc(i.name)}</span>`).join('');
+      return `
+        <article class="skiper-card overflow-hidden cursor-pointer flex flex-col" onclick="openListingDetail(${l.id})">
+          <div class="relative aspect-[4/3] bg-zinc-900">
+            <img src="${esc(cover)}" alt="" loading="lazy" class="w-full h-full object-cover">
+            <button type="button" class="btn-shortlist absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 backdrop-blur flex items-center justify-center ${saved ? 'text-rose-400' : 'text-white'}" data-save-id="${l.id}" aria-label="Save room" onclick="toggleSaved(${l.id}, event)">
+              <i data-lucide="heart" class="w-4 h-4"></i>
+            </button>
+            <span class="absolute bottom-3 left-3 tag bg-black/70">${esc(l.totalBhk)}</span>
+          </div>
+          <div class="p-4 flex-1 flex flex-col">
+            <p class="text-[11px] text-zinc-400 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>${esc(l.location)}</p>
+            <h3 class="font-bold mt-1 line-clamp-2">${esc(l.title)}</h3>
+            <p class="text-xs text-zinc-400 mt-1">${esc(l.offering)}</p>
+            <div class="flex flex-wrap gap-1.5 mt-3">${inv}</div>
+            <div class="flex items-end justify-between mt-auto pt-4">
+              <div><span class="text-lg font-extrabold">${rupees(l.rent)}</span><span class="text-xs text-zinc-500">/mo</span></div>
+              <span class="text-[11px] text-zinc-400">${esc(l.availableDate)}</span>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function renderListings(list) {
+      const grid = $('listingsGrid');
+      $('resultsCount').textContent = `${list.length} room${list.length === 1 ? '' : 's'} found`;
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full skiper-card p-10 text-center">
+          <i data-lucide="search-x" class="w-8 h-8 mx-auto text-zinc-500"></i>
+          <p class="font-semibold mt-3">No rooms match these filters</p>
+          <p class="text-xs text-zinc-400 mt-1">Try a different area or reset the filters.</p>
+          <button type="button" class="skiper-btn-secondary px-4 py-2 text-xs font-semibold mt-4" onclick="resetFilters()">Reset filters</button></div>`;
+      } else {
+        grid.innerHTML = list.map(cardHtml).join('');
+      }
+      icons();
+    }
+
+    function renderAreaChips() {
+      const row = $('areaChipsRow');
+      const chips = [...new Set(listingsCache.map(l => (l.location || '').split(',')[0].trim()).filter(Boolean))].slice(0, 8);
+      row.innerHTML = chips.length ? `<span class="text-[11px] text-zinc-500 self-center">Quick filter:</span>` + chips.map(c =>
+        `<button type="button" class="area-shortlist-chip" data-area="${esc(c)}" onclick="setSearch(this.dataset.area)">${esc(c)}</button>`).join('') : '';
+    }
+
+    window.setSearch = function (val) {
+      $('areaSchemeSearchInput').value = val;
+      $('globalSearchInput').value = val;
+      $('btnClearAreaSearch').classList.toggle('hidden', !val);
+      switchView('explore');
+      fetchMarketplaceListings();
+    };
+
+    window.syncSearch = function (val, source) {
+      if (source === 'global') $('areaSchemeSearchInput').value = val; else $('globalSearchInput').value = val;
+      $('btnClearAreaSearch').classList.toggle('hidden', !val);
+      if (source === 'global' && $('view-explore').classList.contains('hidden')) switchView('explore');
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(fetchMarketplaceListings, 250);
+    };
+
+    window.clearSearch = function () { setSearch(''); };
+
+    window.resetFilters = function () {
+      ['filterBhk', 'filterRoomType', 'filterFurnishing', 'filterCity'].forEach(id => $(id).value = 'all');
+      $('filterBudget').value = '0';
+      $('areaSchemeSearchInput').value = '';
+      $('globalSearchInput').value = '';
+      $('btnClearAreaSearch').classList.add('hidden');
+      fetchMarketplaceListings();
+    };
+
+    // ---------- listing detail + inquiry ----------
+    let detailListing = null;
+    window.openListingDetail = async function (id) {
+      let l = listingsCache.find(x => x.id === id) || savedCache.find(x => x.id === id) || myListingsCache.find(x => x.id === id);
+      try { l = await api('/api/listings/' + id); } catch (e) { if (!l) { showToast('Listing not found', e.message, 'error'); return; } }
+      detailListing = l;
+      const imgs = (l.images || []).map(imgUrl);
+      const user = getUser();
+      const isOwner = user && user.email && l.tenantEmail && user.email.toLowerCase() === l.tenantEmail.toLowerCase();
+      $('listingDetailBody').innerHTML = `
+        <div class="relative">
+          <img id="detailMainImg" src="${esc(imgs[0] || '')}" alt="" class="w-full aspect-[16/9] object-cover bg-zinc-900">
+          <button type="button" aria-label="Close" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 backdrop-blur flex items-center justify-center" onclick="closeListingDetail()"><i data-lucide="x" class="w-5 h-5"></i></button>
+          ${imgs.length > 1 ? `<div class="absolute bottom-3 left-3 flex gap-2">${imgs.map(u => `<img src="${esc(u)}" alt="" class="w-14 h-10 object-cover rounded-lg border border-white/20 cursor-pointer" onclick="document.getElementById('detailMainImg').src=this.src">`).join('')}</div>` : ''}
+        </div>
+        <div class="p-5 sm:p-6 grid md:grid-cols-5 gap-6">
+          <div class="md:col-span-3 space-y-4">
+            <div>
+              <p class="text-xs text-zinc-400 flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i>${esc(l.location)}</p>
+              <h3 class="text-xl font-extrabold mt-1">${esc(l.title)}</h3>
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                <span class="tag">${esc(l.totalBhk)}</span><span class="tag">${esc(l.offering)}</span><span class="tag">${esc(l.condition)}</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-2xl bg-white/5 p-3"><p class="text-[11px] text-zinc-400">Rent</p><p class="font-extrabold">${rupees(l.rent)}</p></div>
+              <div class="rounded-2xl bg-white/5 p-3"><p class="text-[11px] text-zinc-400">Deposit</p><p class="font-extrabold">${rupees(l.deposit)}</p></div>
+              <div class="rounded-2xl bg-white/5 p-3"><p class="text-[11px] text-zinc-400">Available</p><p class="font-bold text-sm">${esc(l.availableDate)}</p></div>
+            </div>
+            <p class="text-xs text-zinc-400"><i data-lucide="receipt" class="inline w-3.5 h-3.5"></i> Bills: <span class="text-zinc-200">${esc(l.bills)}</span></p>
+            ${(l.inventory || []).length ? `<div><h4 class="text-sm font-bold mb-2">Furniture left behind</h4><ul class="space-y-1.5">${l.inventory.map(i => `<li class="text-sm flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400 mt-0.5 shrink-0"></i><span><span class="font-semibold">${esc(i.name)}</span> <span class="text-zinc-400">— ${esc(i.detail)}</span></span></li>`).join('')}</ul></div>` : ''}
+            ${(l.shared || []).length ? `<div><h4 class="text-sm font-bold mb-2">Shared in the flat</h4><div class="flex flex-wrap gap-1.5">${l.shared.map(s => `<span class="tag">${esc(s)}</span>`).join('')}</div></div>` : ''}
+            <div class="flex items-center gap-3 pt-2 border-t border-white/10">
+              <div class="w-10 h-10 rounded-full bg-zinc-100 text-zinc-900 font-extrabold flex items-center justify-center text-sm">${esc(l.tenantInitial)}</div>
+              <div><p class="text-sm font-bold">${esc(l.tenantName)}</p><p class="text-[11px] text-zinc-400">${esc(l.tenantRole)}</p></div>
+            </div>
+          </div>
+          <div class="md:col-span-2">
+            ${isOwner ? `
+              <div class="rounded-2xl bg-white/5 p-4 space-y-2">
+                <p class="text-sm font-bold">This is your listing</p>
+                <button type="button" class="skiper-btn-secondary w-full px-3 py-2 text-sm font-semibold" onclick="closeListingDetail(); editListing(${l.id})">Edit listing</button>
+                <button type="button" class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-rose-900 text-rose-300 hover:bg-rose-950/40" onclick="deleteListing(${l.id})">Remove listing</button>
+              </div>` : `
+            <form class="rounded-2xl bg-white/5 p-4 space-y-3" onsubmit="submitInquiry(event, ${l.id})">
+              <h4 class="font-bold">Send an inquiry</h4>
+              <input id="inqName" class="ob-glass-input" required placeholder="Your name" value="${esc(user?.name || '')}">
+              <input id="inqEmail" type="email" class="ob-glass-input" required placeholder="Email" value="${esc(user?.email || '')}">
+              <input id="inqPhone" class="ob-glass-input" placeholder="Phone" value="${esc(user?.contact || '')}">
+              <select id="inqOccupation" class="ob-glass-select"><option>Working Professional</option><option>Student</option><option>Other</option></select>
+              <input id="inqMoveIn" class="ob-glass-input" placeholder="Move-in date (e.g. 1st Dec)">
+              <textarea id="inqMessage" rows="3" class="ob-glass-input" placeholder="Hi! I'm interested in the room…"></textarea>
+              <button type="submit" class="ob-btn-primary"><i data-lucide="send" class="w-4 h-4"></i> Send inquiry</button>
+            </form>`}
+          </div>
+        </div>`;
+      $('listingDetailModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      icons();
+    };
+    window.closeListingDetail = function () {
+      $('listingDetailModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+
+    window.submitInquiry = async function (ev, listingId) {
+      ev.preventDefault();
+      const btn = ev.target.querySelector('button[type=submit]');
+      btn.disabled = true;
+      try {
+        await api('/api/inquiries', { method: 'POST', body: JSON.stringify({
+          listingId,
+          seekerName: $('inqName').value.trim(),
+          seekerEmail: $('inqEmail').value.trim(),
+          seekerPhone: $('inqPhone').value.trim(),
+          occupation: $('inqOccupation').value,
+          moveInDate: $('inqMoveIn').value.trim(),
+          message: $('inqMessage').value.trim()
+        }) });
+        closeListingDetail();
+        showToast('Inquiry sent', 'The host will get back to you.');
+      } catch (err) {
+        showToast('Could not send inquiry', err.message, 'error');
+      } finally { btn.disabled = false; }
+    };
+
+    // ---------- saved view ----------
+    let savedCache = [];
+    async function renderSaved() {
+      const grid = $('savedGrid');
+      const ids = getSaved();
+      if (!ids.length) {
+        grid.innerHTML = `<div class="col-span-full skiper-card p-10 text-center"><i data-lucide="heart" class="w-8 h-8 mx-auto text-zinc-500"></i><p class="font-semibold mt-3">No saved rooms yet</p><p class="text-xs text-zinc-400 mt-1">Tap the heart on any room to save it.</p></div>`;
+        icons(); return;
+      }
+      try {
+        const all = await api('/api/listings');
+        savedCache = all.filter(l => ids.includes(l.id));
+        // drop ids of listings that no longer exist
+        if (savedCache.length !== ids.length) setSaved(savedCache.map(l => l.id));
+        grid.innerHTML = savedCache.length ? savedCache.map(cardHtml).join('') : `<div class="col-span-full skiper-card p-10 text-center text-sm text-zinc-400">Your saved rooms have been removed by their hosts.</div>`;
+      } catch (err) {
+        grid.innerHTML = `<div class="col-span-full skiper-card p-8 text-center text-sm text-rose-400">${esc(err.message)}</div>`;
+      }
+      icons();
+    }
+
+    // ---------- create / edit listing ----------
+    let uploadedPhotos = [];
+
+    function renderPhotoPreviews() {
+      $('photoPreviewList').innerHTML = uploadedPhotos.map((u, i) => `
+        <div class="relative w-24 h-20 rounded-xl overflow-hidden border border-white/10">
+          <img src="${esc(imgUrl(u))}" alt="" class="w-full h-full object-cover">
+          ${i === 0 ? '<span class="absolute bottom-1 left-1 text-[9px] font-bold bg-black/70 px-1.5 rounded">Cover</span>' : ''}
+          <button type="button" aria-label="Remove photo" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center" onclick="removePhoto(${i})"><i data-lucide="x" class="w-3 h-3"></i></button>
+        </div>`).join('');
+      icons();
+    }
+    window.removePhoto = function (i) { uploadedPhotos.splice(i, 1); renderPhotoPreviews(); };
+
+    window.uploadSelectedPhotos = async function (files) {
+      for (const file of Array.from(files || [])) {
+        const fd = new FormData(); fd.append('file', file);
+        try {
+          const r = await api('/api/upload', { method: 'POST', body: fd });
+          uploadedPhotos.push(r.url);
+          renderPhotoPreviews();
+        } catch (err) { showToast('Upload failed', `${file.name}: ${err.message}`, 'error'); }
+      }
+      $('clPhotoInput').value = '';
+    };
+
+    let cameraStream = null;
+    window.openCamera = async function () {
+      $('cameraModal').classList.remove('hidden');
+      $('cameraError').classList.add('hidden');
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        $('cameraVideo').srcObject = cameraStream;
+      } catch (err) {
+        $('cameraError').textContent = 'Camera not available: ' + err.message;
+        $('cameraError').classList.remove('hidden');
+      }
+      icons();
+    };
+    window.closeCamera = function () {
+      if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+      $('cameraModal').classList.add('hidden');
+    };
+    window.captureCameraPhoto = async function () {
+      const video = $('cameraVideo');
+      if (!cameraStream || !video.videoWidth) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      try {
+        const r = await api('/api/upload/camera', { method: 'POST', body: JSON.stringify({ imageBase64: canvas.toDataURL('image/jpeg', 0.85), source: 'live-camera' }) });
+        uploadedPhotos.push(r.url);
+        renderPhotoPreviews();
+        closeCamera();
+        showToast('Photo added');
+      } catch (err) { showToast('Could not save photo', err.message, 'error'); }
+    };
+
+    window.addInventoryRow = function (item) {
+      const row = document.createElement('div');
+      row.className = 'inv-row grid grid-cols-12 gap-2';
+      row.innerHTML = `
+        <input class="ob-glass-input col-span-4 inv-name" placeholder="Item (e.g. Desk)" value="${esc(item?.name || '')}">
+        <input class="ob-glass-input col-span-5 inv-detail" placeholder="Details (e.g. Teak study table)" value="${esc(item?.detail || '')}">
+        <input class="ob-glass-input col-span-2 inv-qty" type="number" min="1" value="${esc(item?.quantity || 1)}" aria-label="Quantity">
+        <button type="button" aria-label="Remove item" class="col-span-1 text-zinc-500 hover:text-rose-400 flex items-center justify-center" onclick="this.parentElement.remove()"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+      $('inventoryRows').appendChild(row);
+      icons();
+    };
+
+    function resetCreateForm() {
+      $('createListingForm').reset();
+      $('editListingId').value = '';
+      $('inventoryRows').innerHTML = '';
+      uploadedPhotos = [];
+      renderPhotoPreviews();
+      addInventoryRow();
+      $('createViewTitle').textContent = 'List your spare room';
+      $('btnPublishText').textContent = 'Publish listing';
+      $('createListingError').classList.add('hidden');
+      const loc = currentLocation();
+      if (loc) $('clLocation').value = loc.area ? `${loc.area}, ${loc.city}` : loc.city;
+      const u = getUser();
+      if (u?.contact) $('clPhone').value = u.contact;
+    }
+
+    window.cancelCreate = function () { $('editListingId').value = ''; switchView(getUser() ? 'profile' : 'explore'); };
+
+    window.submitListing = async function (ev) {
+      ev.preventDefault();
+      const user = getUser();
+      if (!user) { window.onboardingManager.openAuthModal('login', 'create'); return; }
+      const errEl = $('createListingError');
+      errEl.classList.add('hidden');
+      const inventory = [...document.querySelectorAll('#inventoryRows .inv-row')].map(r => ({
+        name: r.querySelector('.inv-name').value.trim() || 'Item',
+        detail: r.querySelector('.inv-detail').value.trim(),
+        quantity: Number(r.querySelector('.inv-qty').value) || 1
+      })).filter(i => i.detail);
+      const body = {
+        title: $('clTitle').value.trim(),
+        location: $('clLocation').value.trim(),
+        totalBhk: $('clBhk').value,
+        offering: $('clOffering').value,
+        rent: Number($('clRent').value),
+        deposit: Number($('clDeposit').value) || 0,
+        availableDate: $('clAvailable').value.trim() || 'Immediate Move-in',
+        bills: $('clBills').value,
+        condition: $('clCondition').value,
+        tenantName: user.name,
+        tenantInitial: user.initials || '',
+        tenantEmail: user.email,
+        tenantPhone: $('clPhone').value.trim(),
+        images: uploadedPhotos,
+        inventory,
+        shared: $('clShared').value.split(',').map(s => s.trim()).filter(Boolean)
+      };
+      const editId = $('editListingId').value;
+      const btn = $('btnPublishListing');
+      btn.disabled = true;
+      try {
+        if (editId) {
+          await api('/api/listings/' + editId, { method: 'PUT', body: JSON.stringify(body) });
+          showToast('Listing updated');
+        } else {
+          await api('/api/listings', { method: 'POST', body: JSON.stringify(body) });
+          showToast('Listing published', 'Your room is now live.');
+        }
+        $('editListingId').value = '';
+        switchView('profile');
+        fetchMarketplaceListings();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      } finally { btn.disabled = false; }
+    };
+
+    window.editListing = async function (id) {
+      let l;
+      try { l = await api('/api/listings/' + id); } catch (e) { showToast('Could not load listing', e.message, 'error'); return; }
+      $('editListingId').value = id;
+      switchView('create');
+      $('createViewTitle').textContent = 'Edit listing';
+      $('btnPublishText').textContent = 'Save changes';
+      $('clTitle').value = l.title; $('clLocation').value = l.location; $('clBhk').value = l.totalBhk;
+      $('clOffering').value = l.offering; $('clRent').value = l.rent; $('clDeposit').value = l.deposit;
+      $('clAvailable').value = l.availableDate; $('clBills').value = l.bills; $('clCondition').value = l.condition;
+      $('clPhone').value = l.tenantPhone || ''; $('clShared').value = (l.shared || []).join(', ');
+      uploadedPhotos = (l.images || []).slice(); renderPhotoPreviews();
+      $('inventoryRows').innerHTML = '';
+      (l.inventory || []).forEach(addInventoryRow);
+      if (!(l.inventory || []).length) addInventoryRow();
+    };
+
+    window.deleteListing = async function (id) {
+      if (!confirm('Remove this listing from SubletNest? It will no longer be visible to anyone.')) return;
+      try {
+        await api('/api/listings/' + id, { method: 'DELETE' });
+        closeListingDetail();
+        showToast('Listing removed');
+        loadProfile();
+        fetchMarketplaceListings();
+      } catch (err) { showToast('Could not remove listing', err.message, 'error'); }
+    };
+
+    // ---------- profile ----------
+    let myListingsCache = [];
+    async function loadProfile() {
+      const user = getUser();
+      if (!user) return;
+      $('profileSubtitle').textContent = `${user.name} · ${user.email}`;
+      const grid = $('myListingsGrid');
+      try {
+        myListingsCache = await api('/api/listings?tenantEmail=' + encodeURIComponent(user.email));
+        grid.innerHTML = myListingsCache.length ? myListingsCache.map(l => `
+          <div class="skiper-card overflow-hidden flex flex-col">
+            <img src="${esc(imgUrl((l.images || [])[0]))}" alt="" class="w-full aspect-[16/9] object-cover bg-zinc-900 cursor-pointer" onclick="openListingDetail(${l.id})">
+            <div class="p-4 flex-1 flex flex-col">
+              <h3 class="font-bold line-clamp-2">${esc(l.title)}</h3>
+              <p class="text-xs text-zinc-400 mt-1">${esc(l.location)} · ${rupees(l.rent)}/mo</p>
+              <div class="flex gap-2 mt-auto pt-4">
+                <button type="button" class="skiper-btn-secondary flex-1 px-3 py-2 text-xs font-semibold" onclick="editListing(${l.id})">Edit</button>
+                <button type="button" class="flex-1 px-3 py-2 text-xs font-semibold rounded-xl border border-rose-900 text-rose-300 hover:bg-rose-950/40" onclick="deleteListing(${l.id})">Remove</button>
+              </div>
+            </div>
+          </div>`).join('') : `<div class="col-span-full skiper-card p-8 text-center text-sm text-zinc-400">You haven't listed any rooms yet.</div>`;
+      } catch (err) {
+        grid.innerHTML = `<div class="col-span-full skiper-card p-8 text-center text-sm text-rose-400">${esc(err.message)}</div>`;
+      }
+
+      const list = $('myInquiriesList');
+      try {
+        const inqs = await api('/api/inquiries/my-inquiries?tenantEmail=' + encodeURIComponent(user.email));
+        list.innerHTML = inqs.length ? inqs.map(q => `
+          <div class="skiper-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="text-sm">
+              <p class="font-bold">${esc(q.seekerName)} <span class="text-xs font-normal text-zinc-400">· ${esc(q.occupation)} · move-in ${esc(q.moveInDate)}</span></p>
+              <p class="text-xs text-zinc-400">for “${esc(q.listingTitle)}” · ${esc(q.seekerEmail)}${q.seekerPhone ? ' · ' + esc(q.seekerPhone) : ''}</p>
+              <p class="text-xs text-zinc-300 mt-1">${esc(q.message)}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              ${q.status === 'Pending' ? `
+                <button type="button" class="skiper-btn-secondary px-3 py-1.5 text-xs font-semibold" onclick="setInquiryStatus(${q.id}, 'Accepted')">Accept</button>
+                <button type="button" class="px-3 py-1.5 text-xs font-semibold rounded-xl border border-white/10 text-zinc-400 hover:text-white" onclick="setInquiryStatus(${q.id}, 'Declined')">Decline</button>`
+              : `<span class="tag ${q.status === 'Accepted' ? 'text-emerald-300' : 'text-zinc-400'}">${esc(q.status)}</span>`}
+            </div>
+          </div>`).join('') : `<p class="text-sm text-zinc-400">No inquiries yet.</p>`;
+      } catch (err) {
+        list.innerHTML = `<p class="text-sm text-rose-400">${esc(err.message)}</p>`;
+      }
+      icons();
+    }
+
+    window.setInquiryStatus = async function (id, status) {
+      try {
+        await api(`/api/inquiries/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+        showToast(`Inquiry ${status.toLowerCase()}`);
+        loadProfile();
+      } catch (err) { showToast('Could not update inquiry', err.message, 'error'); }
+    };
+
+    // ---------- keyboard ----------
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (!$('cameraModal').classList.contains('hidden')) closeCamera();
+      else if (!$('listingDetailModal').classList.contains('hidden')) closeListingDetail();
+      else if (!$('obAuthModal').classList.contains('hidden')) window.onboardingManager.closeAuthModal();
+      else if (!$('adminPortalModal').classList.contains('hidden')) window.onboardingManager.closeAdminPortal();
+    });
+
+    // ---------- boot ----------
+    document.addEventListener('DOMContentLoaded', () => {
+      window.currentUser = getUser();
+      updateSavedBadge();
+      // onboarding.js runs showMarketplace() (which fetches listings) when a location is saved;
+      // otherwise fetch now so the grid is ready behind the location screen.
+      if (!currentLocation()) fetchMarketplaceListings();
+      window.renderAuthNav();
+      icons();
+    });
+  })();
+  </script>
+
+  <script src="onboarding/onboarding.js"></script>
+  <script src="skiper-gestures/skiper-gestures.js"></script>
 </body>
 </html>

@@ -914,6 +914,7 @@
     localStorage.setItem('subletnest_user', JSON.stringify(userObj));
     window.currentUser = userObj;
 
+    const redirectAction = pendingAuthRedirect; // closeAuthModal() clears it
     closeAuthModal();
 
     if (typeof window.renderAuthNav === 'function') window.renderAuthNav();
@@ -922,7 +923,7 @@
     }
 
     // Direct user to pending action (e.g. 'create' listing)
-    if (pendingAuthRedirect === 'create' && typeof window.switchView === 'function') {
+    if (redirectAction === 'create' && typeof window.switchView === 'function') {
       window.switchView('create');
     } else if (userObj.role === 'Administrator') {
       openAdminPortal();
