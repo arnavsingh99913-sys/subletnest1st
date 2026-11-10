@@ -4,6 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Admin login is read from user secrets (stored outside the repo). See README "Administrator account". -->
+    <UserSecretsId>subletnest-7c1e4b2a-3f5d-4c8e-9a61-2d0b8e5f4a13</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

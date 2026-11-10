@@ -64,7 +64,8 @@ if (!Directory.Exists(uploadsDir))
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SubletDbContext>();
-    DbInitializer.Initialize(db);
+    var initLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbInitializer");
+    DbInitializer.Initialize(db, app.Configuration, initLogger);
 }
 
 app.UseCors("AllowAll");

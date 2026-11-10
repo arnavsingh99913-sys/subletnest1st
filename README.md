@@ -67,7 +67,27 @@ Then open <http://localhost:5080>. The page always talks to the server it was lo
    | **Buyer**: looking for a room | See all listings, save rooms, send inquiries to sellers, track replies under **My Inquiries** |
    | **Seller**: has a room to let | List rooms with photos and furniture, edit or remove them, accept or decline inquiries under **My Listings** |
 
-An administrator account is created on first run; it can do both, plus open the admin portal (all users and listing history). Its login is set in `backend/Data/DbInitializer.cs`. Change it before you put the app anywhere other people can reach.
+## Administrator account (optional)
+
+The administrator can do everything a buyer and seller can, and also opens the **admin portal** (all users and listing history). There is no admin login in the code. You choose your own, and it's kept outside the project folder so it never reaches GitHub.
+
+From the `backend` folder, store your admin email and password as .NET *user secrets*:
+
+```bash
+dotnet user-secrets set "Admin:Email" "you@example.com"
+```
+
+```bash
+dotnet user-secrets set "Admin:Password" "choose-a-strong-password"
+```
+
+Optionally set a display name with `Admin:Name`. Restart the app and sign in with that email and password.
+
+- User secrets are stored in your user profile, not in the repo. On Windows the location is `%APPDATA%\Microsoft\UserSecrets\`.
+- To change the password, set it again and restart.
+- With no admin configured, the app still runs normally and logs a warning that there's no administrator.
+- Any other account with the Administrator role is changed to Seller at startup.
+- On a server, use environment variables `Admin__Email` and `Admin__Password` instead (two underscores). User secrets are only read in Development.
 
 ## Project layout
 
@@ -112,4 +132,4 @@ This is a demo, not production-ready:
 
 - **No server-side sessions.** The browser remembers who is signed in, and the API doesn't check who is calling. For example, the one-listing limit for guests is applied in the page only.
 - **Google sign-in is simulated.** It asks for an email address and doesn't contact Google.
-- **The admin password is in the source code** and is reset on every start.
+- **Admin-only API endpoints aren't protected.** `/api/auth/users` and `/api/listings/admin/audit` answer anyone who calls them, not just the administrator.

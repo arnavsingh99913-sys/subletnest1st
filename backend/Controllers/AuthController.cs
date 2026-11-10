@@ -83,15 +83,14 @@ public class AuthController : ControllerBase
         // Generate Initials from Name
         var initials = GenerateInitials(name);
 
-        var isAdminEmail = lowerEmail == "arnavsingh99913@gmail.com" || lowerEmail == "arnavsingh9913@gmail.com";
-
+        // Sign-up can only create Buyers or Sellers. The administrator is created from configuration at startup.
         var newUser = new User
         {
-            Name = isAdminEmail ? "Arnav Singh" : name,
+            Name = name,
             Contact = contact,
             Email = email,
             PasswordHash = HashPassword(password),
-            Role = isAdminEmail ? "Administrator" : NormalizeRole(dto.Role),
+            Role = NormalizeRole(dto.Role),
             Initials = initials,
             CreatedAt = DateTime.UtcNow
         };

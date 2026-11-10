@@ -6,7 +6,7 @@
  * - Multi-keyword address shortlisting: street name, city name, state name, neighborhood
  * - Shifted Leaser Authentication: opened when listing a room or managing profile
  * - Google Sign-In & Password Auth (Name, Email, Contact + Password)
- * - Admin Portal: arnavsingh99913@gmail.com / Arnav$123
+ * - Admin Portal: for the administrator account configured on the server (see README)
  */
 
 (function() {
@@ -772,10 +772,6 @@
         submitBtn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Signing In...`;
         hideObError(errBox);
 
-        // Check Admin ID arnavsingh99913@gmail.com / Arnav$123
-        const lowerId = identifier.toLowerCase();
-        const isAdminCred = (lowerId === 'arnavsingh99913@gmail.com' || lowerId === 'arnavsingh9913@gmail.com') && password === 'Arnav$123';
-
         try {
           const apiBase = getApiBase();
           const res = await fetch(`${apiBase}/api/auth/login`, {
@@ -784,38 +780,26 @@
             body: JSON.stringify({ identifier, password })
           });
 
-          const data = await res.json();
-          if (!res.ok && !isAdminCred) {
-            throw new Error(data.message || 'Invalid credentials.');
+          let data = null;
+          try { data = await res.json(); } catch (e) { data = null; }
+          if (!res.ok || !data) {
+            throw new Error((data && data.message) || 'Sign in failed. Is the server running?');
           }
 
+          // Role (including Administrator) comes only from the server's answer
           const userObj = {
-            id: data?.id || 9999,
-            name: (isAdminCred || data?.role === 'Administrator') ? "Arnav Singh" : (data?.name || identifier),
-            email: isAdminCred ? identifier : (data?.email || identifier),
-            contact: (isAdminCred || data?.role === 'Administrator') ? (data?.contact || "+91 99913 00000") : (data?.contact || ""),
-            initials: (isAdminCred || data?.role === 'Administrator') ? "AS" : (data?.initials || "LE"),
-            role: (isAdminCred || data?.role === 'Administrator') ? "Administrator" : (data?.role || 'Buyer'),
+            id: data.id,
+            name: data.name || identifier,
+            email: data.email || identifier,
+            contact: data.contact || "",
+            initials: data.initials || "ME",
+            role: data.role || 'Buyer',
             savedIds: []
           };
 
           handleAuthSuccess(userObj);
         } catch(err) {
-          if (isAdminCred) {
-            // Local fallback for admin credentials
-            const adminObj = {
-              id: 9999,
-              name: "Arnav Singh",
-              email: lowerId === 'arnavsingh99913@gmail.com' ? "arnavsingh99913@gmail.com" : "arnavsingh9913@gmail.com",
-              contact: "+91 99913 00000",
-              initials: "AS",
-              role: "Administrator",
-              savedIds: []
-            };
-            handleAuthSuccess(adminObj);
-          } else {
-            showObError(errBox, err.message || 'Sign in failed.');
-          }
+          showObError(errBox, err.message || 'Sign in failed.');
         } finally {
           submitBtn.disabled = false;
           submitBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i> Sign In to SubletNest`;
@@ -864,10 +848,10 @@
 
           const userObj = {
             id: data.id,
-            name: (data.role === 'Administrator' || email.toLowerCase() === 'arnavsingh99913@gmail.com' || email.toLowerCase() === 'arnavsingh9913@gmail.com') ? "Arnav Singh" : data.name,
+            name: data.name,
             email: data.email,
             contact: data.contact,
-            initials: (data.role === 'Administrator' || email.toLowerCase() === 'arnavsingh99913@gmail.com' || email.toLowerCase() === 'arnavsingh9913@gmail.com') ? "AS" : data.initials,
+            initials: data.initials,
             role: data.role || getSelectedSignupRole(),
             savedIds: []
           };
@@ -890,19 +874,17 @@
     if (googleEmail === null) return; // User cancelled
 
     const email = googleEmail.trim() || "leaser.google@gmail.com";
-    const lowerG = email.toLowerCase();
-    const isAdmin = lowerG === 'arnavsingh99913@gmail.com' || lowerG === 'arnavsingh9913@gmail.com';
-    const name = isAdmin ? "Arnav Singh" : (email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()));
-    const contact = isAdmin ? "+91 99913 00000" : "+91 98765 43210";
-    const initials = isAdmin ? "AS" : name.slice(0, 2).toUpperCase();
+    // Simulated Google sign-in can only ever make a Buyer or Seller, never an administrator
+    const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const initials = name.slice(0, 2).toUpperCase();
 
     const userObj = {
-      id: isAdmin ? 9999 : Math.floor(Date.now() % 10000),
+      id: Math.floor(Date.now() % 10000),
       name: name,
       email: email,
-      contact: contact,
+      contact: "",
       initials: initials,
-      role: isAdmin ? "Administrator" : getSelectedSignupRole(),
+      role: getSelectedSignupRole(),
       isGoogleAuth: true,
       savedIds: []
     };
@@ -957,7 +939,7 @@
   }
 
   // =========================================================================
-  // 6. ADMIN PORTAL (arnavsingh99913@gmail.com / Arnav$123)
+  // 6. ADMIN PORTAL (administrator account configured on the server)
   //    - Registered Users Directory with search by Name or Contact
   //    - Removed Rooms & Listing Audit Database
   // =========================================================================
@@ -1010,16 +992,8 @@
       const apiBase = getApiBase();
       const url = searchQuery ? `${apiBase}/api/auth/users?search=${encodeURIComponent(searchQuery)}` : `${apiBase}/api/auth/users`;
       const res = await fetch(url);
-      if (res.ok) {
-        adminUsersList = await res.json();
-      } else {
-        // Fallback demo users if offline
-        adminUsersList = [
-          { id: 1, name: "Arnav Singh", email: "arnavsingh99913@gmail.com", contact: "+91 99913 00000", role: "Administrator", createdAt: "2026-03-01T00:00:00Z", initials: "AS" },
-          { id: 2, name: "Rohan Sharma", email: "rohan@example.com", contact: "+91 98765 43210", role: "Primary Leaseholder", createdAt: "2026-03-02T10:00:00Z", initials: "RS" },
-          { id: 3, name: "Priya S.", email: "priya@example.com", contact: "+91 91234 56789", role: "Primary Leaseholder", createdAt: "2026-03-03T14:30:00Z", initials: "PS" }
-        ];
-      }
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      adminUsersList = await res.json();
 
       if (searchQuery) {
         const sq = searchQuery.toLowerCase();

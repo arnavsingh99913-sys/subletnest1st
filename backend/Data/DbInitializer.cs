@@ -5,7 +5,7 @@ namespace SubletNest.Data;
 
 public static class DbInitializer
 {
-    public static void Initialize(SubletDbContext context)
+    public static void Initialize(SubletDbContext context, IConfiguration config, ILogger logger)
     {
         context.Database.EnsureCreated();
 
@@ -46,33 +46,7 @@ public static class DbInitializer
             );
         ");
 
-        // Ensure Admin user arnavsingh99913@gmail.com with password Arnav$123 exists
-        var adminEmails = new[] { "arnavsingh99913@gmail.com", "arnavsingh9913@gmail.com" };
-        foreach (var adminEmail in adminEmails)
-        {
-            var adminUser = context.Users.FirstOrDefault(u => u.Email.ToLower() == adminEmail.ToLower());
-            if (adminUser == null)
-            {
-                adminUser = new User
-                {
-                    Name = "Arnav Singh",
-                    Contact = "+91 99913 00000",
-                    Email = adminEmail,
-                    PasswordHash = Controllers.AuthController.HashPassword("Arnav$123"),
-                    Role = "Administrator",
-                    Initials = "AS",
-                    CreatedAt = DateTime.UtcNow
-                };
-                context.Users.Add(adminUser);
-            }
-            else
-            {
-                adminUser.Name = "Arnav Singh";
-                adminUser.PasswordHash = Controllers.AuthController.HashPassword("Arnav$123");
-                adminUser.Role = "Administrator";
-            }
-        }
-        context.SaveChanges();
+        EnsureAdministrator(context, config, logger);
 
         if (context.Listings.Any())
         {
@@ -222,5 +196,70 @@ public static class DbInitializer
 
         context.Listings.AddRange(listings);
         context.SaveChanges();
+    }
+
+    /// <summary>
+    /// The administrator login comes from configuration, never from source code:
+    ///   Admin:Email, Admin:Password (required), Admin:Name, Admin:Contact (optional).
+    /// Locally these live in .NET user secrets; on a server, use environment variables
+    /// (Admin__Email, Admin__Password). Any other account holding the Administrator role
+    /// is demoted to Seller, so old hard-coded admin logins stop working.
+    /// </summary>
+    private static void EnsureAdministrator(SubletDbContext context, IConfiguration config, ILogger logger)
+    {
+        var email = config["Admin:Email"]?.Trim();
+        var password = config["Admin:Password"];
+        var configured = !string.IsNullOrWhiteSpace(email) && !string.IsNullOrEmpty(password);
+
+        var lowerEmail = configured ? email!.ToLowerInvariant() : null;
+        foreach (var other in context.Users.Where(u => u.Role == "Administrator").ToList())
+        {
+            if (other.Email.ToLower() != lowerEmail)
+            {
+                other.Role = Controllers.AuthController.RoleSeller;
+                logger.LogWarning("Removed administrator role from {Email}: it is not the configured Admin:Email.", other.Email);
+            }
+        }
+
+        if (!configured)
+        {
+            context.SaveChanges();
+            logger.LogWarning("No administrator account: set Admin:Email and Admin:Password (see README, \"Administrator account\").");
+            return;
+        }
+
+        if (password!.Length < 8)
+        {
+            throw new InvalidOperationException("Admin:Password must be at least 8 characters.");
+        }
+
+        var name = string.IsNullOrWhiteSpace(config["Admin:Name"]) ? "Administrator" : config["Admin:Name"]!.Trim();
+        var admin = context.Users.FirstOrDefault(u => u.Email.ToLower() == lowerEmail);
+        if (admin == null)
+        {
+            admin = new User
+            {
+                Email = email!,
+                Contact = config["Admin:Contact"]?.Trim() ?? string.Empty,
+                CreatedAt = DateTime.UtcNow
+            };
+            context.Users.Add(admin);
+        }
+
+        admin.Name = name;
+        admin.Initials = InitialsFor(name);
+        admin.Role = "Administrator";
+        admin.PasswordHash = Controllers.AuthController.HashPassword(password);
+        if (!string.IsNullOrWhiteSpace(config["Admin:Contact"])) admin.Contact = config["Admin:Contact"]!.Trim();
+
+        context.SaveChanges();
+        logger.LogInformation("Administrator account ready: {Email}", admin.Email);
+    }
+
+    private static string InitialsFor(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2) return $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}";
+        return name.Length >= 2 ? name[..2].ToUpperInvariant() : "AD";
     }
 }
