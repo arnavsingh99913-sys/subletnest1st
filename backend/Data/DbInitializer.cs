@@ -26,6 +26,9 @@ public static class DbInitializer
         context.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_Users_Contact"" ON ""Users"" (""Contact"");");
         context.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_Users_Name"" ON ""Users"" (""Name"");");
 
+        // Migrate legacy role name: everyone who signed up before Buyer/Seller existed was a lister
+        context.Database.ExecuteSqlRaw(@"UPDATE ""Users"" SET ""Role"" = 'Seller' WHERE ""Role"" = 'Primary Leaseholder';");
+
         // Ensure ListingAudits table exists for Admin DB removed rooms audit
         context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS ""ListingAudits"" (

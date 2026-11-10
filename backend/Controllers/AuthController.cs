@@ -91,7 +91,7 @@ public class AuthController : ControllerBase
             Contact = contact,
             Email = email,
             PasswordHash = HashPassword(password),
-            Role = isAdminEmail ? "Administrator" : (!string.IsNullOrWhiteSpace(dto.Role) ? dto.Role.Trim() : "Primary Leaseholder"),
+            Role = isAdminEmail ? "Administrator" : NormalizeRole(dto.Role),
             Initials = initials,
             CreatedAt = DateTime.UtcNow
         };
@@ -227,6 +227,24 @@ public class AuthController : ControllerBase
             .ToListAsync();
 
         return Ok(users);
+    }
+
+    public const string RoleBuyer = "Buyer";
+    public const string RoleSeller = "Seller";
+
+    /// <summary>
+    /// Only two self-service roles exist: Buyer (looking for a room) and Seller (listing a room).
+    /// Anything else, including a client asking for "Administrator", becomes Buyer.
+    /// </summary>
+    private static string NormalizeRole(string? role)
+    {
+        var r = role?.Trim() ?? string.Empty;
+        if (r.Equals(RoleSeller, StringComparison.OrdinalIgnoreCase) ||
+            r.Equals("Primary Leaseholder", StringComparison.OrdinalIgnoreCase))
+        {
+            return RoleSeller;
+        }
+        return RoleBuyer;
     }
 
     private static string GenerateInitials(string name)

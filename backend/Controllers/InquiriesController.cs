@@ -151,6 +151,43 @@ public class InquiriesController : ControllerBase
     }
 
     /// <summary>
+    /// Get all inquiries a buyer has sent, with their current status
+    /// </summary>
+    [HttpGet("sent")]
+    public async Task<ActionResult<IEnumerable<InquiryDto>>> GetSentInquiries([FromQuery] string seekerEmail)
+    {
+        if (string.IsNullOrWhiteSpace(seekerEmail))
+        {
+            return BadRequest(new { message = "seekerEmail query parameter is required." });
+        }
+
+        var lowerEmail = seekerEmail.Trim().ToLowerInvariant();
+
+        var inquiries = await (
+            from inq in _context.Inquiries
+            join list in _context.Listings on inq.ListingId equals list.Id
+            where inq.SeekerEmail.ToLower() == lowerEmail
+            orderby inq.CreatedAt descending
+            select new InquiryDto
+            {
+                Id = inq.Id,
+                ListingId = inq.ListingId,
+                ListingTitle = list.Title,
+                SeekerName = inq.SeekerName,
+                SeekerEmail = inq.SeekerEmail,
+                SeekerPhone = inq.SeekerPhone,
+                Message = inq.Message,
+                MoveInDate = inq.MoveInDate,
+                Occupation = inq.Occupation,
+                Status = inq.Status,
+                CreatedAt = inq.CreatedAt
+            }
+        ).ToListAsync();
+
+        return Ok(inquiries);
+    }
+
+    /// <summary>
     /// Accept or decline an inquiry
     /// </summary>
     [HttpPut("{id:int}/status")]

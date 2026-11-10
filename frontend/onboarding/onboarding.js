@@ -795,7 +795,7 @@
             email: isAdminCred ? identifier : (data?.email || identifier),
             contact: (isAdminCred || data?.role === 'Administrator') ? (data?.contact || "+91 99913 00000") : (data?.contact || ""),
             initials: (isAdminCred || data?.role === 'Administrator') ? "AS" : (data?.initials || "LE"),
-            role: (isAdminCred || data?.role === 'Administrator') ? "Administrator" : (data?.role || 'Primary Leaseholder'),
+            role: (isAdminCred || data?.role === 'Administrator') ? "Administrator" : (data?.role || 'Buyer'),
             savedIds: []
           };
 
@@ -855,7 +855,7 @@
               contact,
               email,
               password,
-              role: (email.toLowerCase() === 'arnavsingh99913@gmail.com' || email.toLowerCase() === 'arnavsingh9913@gmail.com') ? "Administrator" : "Primary Leaseholder"
+              role: getSelectedSignupRole()
             })
           });
 
@@ -868,7 +868,7 @@
             email: data.email,
             contact: data.contact,
             initials: (data.role === 'Administrator' || email.toLowerCase() === 'arnavsingh99913@gmail.com' || email.toLowerCase() === 'arnavsingh9913@gmail.com') ? "AS" : data.initials,
-            role: data.role || 'Primary Leaseholder',
+            role: data.role || getSelectedSignupRole(),
             savedIds: []
           };
 
@@ -902,7 +902,7 @@
       email: email,
       contact: contact,
       initials: initials,
-      role: isAdmin ? "Administrator" : "Primary Leaseholder",
+      role: isAdmin ? "Administrator" : getSelectedSignupRole(),
       isGoogleAuth: true,
       savedIds: []
     };
@@ -916,6 +916,8 @@
 
     const redirectAction = pendingAuthRedirect; // closeAuthModal() clears it
     closeAuthModal();
+    // Don't leave passwords or details sitting in the forms for the next person
+    ['obLoginForm', 'obSignupForm'].forEach(id => { const f = document.getElementById(id); if (f) f.reset(); });
 
     if (typeof window.renderAuthNav === 'function') window.renderAuthNav();
     if (typeof window.showToast === 'function') {
@@ -928,6 +930,12 @@
     } else if (userObj.role === 'Administrator') {
       openAdminPortal();
     }
+  }
+
+  // Buyer (looking for a room) or Seller (listing a room), from the sign-up form's role picker
+  function getSelectedSignupRole() {
+    const checked = document.querySelector('input[name="obSignupRole"]:checked');
+    return checked && checked.value === 'Seller' ? 'Seller' : 'Buyer';
   }
 
   function showObError(el, msg) {
